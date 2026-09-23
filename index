@@ -1,0 +1,1789 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CuànticLAB - Entrenador de Números Cuánticos (2º Bachillerato)</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Inter Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+              900: '#312e81'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @media print {
+      body * {
+        visibility: hidden;
+      }
+      #printReportModal, #printReportModal * {
+        visibility: visible;
+      }
+      #printReportModal {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        margin: 0;
+        padding: 20px;
+        background: white !important;
+        box-shadow: none !important;
+      }
+      .no-print {
+        display: none !important;
+      }
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background-color: #cbd5e1;
+      border-radius: 9999px;
+    }
+    .badge-sub {
+      font-size: 0.72em;
+      vertical-align: sub;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col antialiased selection:bg-indigo-500 selection:text-white">
+
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-xs">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        <!-- Logo & Title -->
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-cyan-500 flex items-center justify-center text-white shadow-md shadow-indigo-100 font-mono font-bold text-lg">
+            Ψ
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="font-bold text-lg text-slate-900 tracking-tight" id="appTitle">CuànticLAB</span>
+              <span class="text-xs px-2 py-0.5 font-semibold bg-indigo-100 text-indigo-700 rounded-full border border-indigo-200">2º BAT</span>
+            </div>
+            <p class="text-xs text-slate-500 hidden sm:block" id="appSubtitle">Números cuánticos, orbitales atómicos y reglas cuánticas</p>
+          </div>
+        </div>
+
+        <!-- Controls: Timer, Language Toggle, Reset -->
+        <div class="flex items-center gap-2 sm:gap-4">
+          <!-- Stopwatch -->
+          <div class="flex items-center gap-1.5 bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200 font-mono text-xs sm:text-sm text-slate-700 shadow-inner">
+            <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="2"/><path stroke-width="2" stroke-linecap="round" d="M12 6v6l4 2"/></svg>
+            <span id="timerDisplay">00:00</span>
+            <button id="toggleTimerBtn" onclick="toggleTimer()" title="Pausar / Reanudar" class="ml-1 text-slate-400 hover:text-slate-700">
+              <svg id="timerIcon" class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+            </button>
+          </div>
+
+          <!-- Language Selector -->
+          <div class="flex items-center bg-slate-100 p-0.5 rounded-lg border border-slate-200 text-xs font-semibold">
+            <button id="langEsBtn" onclick="setLanguage('es')" class="px-2.5 py-1 rounded-md transition-all bg-white text-indigo-700 shadow-xs">ES</button>
+            <button id="langCaBtn" onclick="setLanguage('ca')" class="px-2.5 py-1 rounded-md transition-all text-slate-600 hover:text-slate-900">CA</button>
+          </div>
+
+          <!-- Report Button -->
+          <button onclick="openReportModal()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-50 text-indigo-700 border border-indigo-200 text-xs font-semibold hover:bg-indigo-100 transition-colors shadow-xs">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            <span class="hidden md:inline" id="btnReportTxt">Informe</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="flex space-x-1 sm:space-x-4 border-t border-slate-100 overflow-x-auto py-1 custom-scrollbar text-sm">
+        <button onclick="switchTab('practice')" id="tab-practice" class="tab-btn py-2 px-3 border-b-2 border-indigo-600 font-semibold text-indigo-600 whitespace-nowrap flex items-center gap-2">
+          <span>🎯</span> <span data-i18n="navPractice">Entrenador Cuántico</span>
+        </button>
+        <button onclick="switchTab('rules')" id="tab-rules" class="tab-btn py-2 px-3 border-b-2 border-transparent font-medium text-slate-600 hover:text-indigo-600 whitespace-nowrap flex items-center gap-2">
+          <span>⚖️</span> <span data-i18n="navRules">¿Válido o Prohibido?</span>
+        </button>
+        <button onclick="switchTab('lab')" id="tab-lab" class="tab-btn py-2 px-3 border-b-2 border-transparent font-medium text-slate-600 hover:text-indigo-600 whitespace-nowrap flex items-center gap-2">
+          <span>🔬</span> <span data-i18n="navLab">Visualizador de Orbitales</span>
+        </button>
+        <button onclick="switchTab('guide')" id="tab-guide" class="tab-btn py-2 px-3 border-b-2 border-transparent font-medium text-slate-600 hover:text-indigo-600 whitespace-nowrap flex items-center gap-2">
+          <span>📖</span> <span data-i18n="navGuide">Guía Teórica PAU</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 w-full">
+    <!-- Scoreboard Metrics: Simplificado y compacto -->
+    <div class="grid grid-cols-3 gap-3 sm:gap-4 mb-6 max-w-2xl mx-auto text-center">
+      <div class="bg-white rounded-xl p-3 border border-slate-200 shadow-xs">
+        <p class="text-xs text-slate-500 font-medium" data-i18n="metricTotal">Respondidas</p>
+        <p class="text-xl font-bold text-slate-800" id="statTotal">0</p>
+      </div>
+      <div class="bg-white rounded-xl p-3 border border-slate-200 shadow-xs">
+        <p class="text-xs text-slate-500 font-medium" data-i18n="metricScore">Aciertos</p>
+        <p class="text-xl font-bold text-emerald-600" id="statCorrect">0</p>
+      </div>
+      <div class="bg-white rounded-xl p-3 border border-slate-200 shadow-xs">
+        <p class="text-xs text-slate-500 font-medium" data-i18n="metricStreak">Racha actual</p>
+        <p class="text-xl font-bold text-indigo-600" id="statStreak">0 🔥</p>
+      </div>
+    </div>
+
+    <div id="section-practice" class="space-y-6">
+      <!-- Mode Selection Header -->
+      <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 class="text-base sm:text-lg font-bold text-slate-900" data-i18n="practiceTitle">Entrenador de Números Cuánticos</h2>
+          <p class="text-xs text-slate-500" data-i18n="practiceSubtitle">Escribe tu respuesta directamente en el campo de texto y pulsa Enter para comprobar.</p>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <div class="inline-flex rounded-lg border border-slate-200 p-1 bg-slate-50 text-xs font-medium">
+            <button onclick="setPracticeSubmode('qn_to_orb')" id="btnSubmode1" class="px-2.5 py-1.5 rounded-md bg-white text-indigo-600 shadow-xs font-semibold transition">
+              (n, l, m) ➔ Orbital
+            </button>
+            <button onclick="setPracticeSubmode('orb_to_qn')" id="btnSubmode2" class="px-2.5 py-1.5 rounded-md text-slate-600 hover:text-slate-900 transition">
+              Orbital ➔ (n, l, m)
+            </button>
+            <button onclick="setPracticeSubmode('mixed')" id="btnSubmode3" class="px-2.5 py-1.5 rounded-md text-slate-600 hover:text-slate-900 transition">
+              🔀 <span data-i18n="submodeMixed">Mixto</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Practice Card -->
+      <div class="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-sm">
+        <div class="max-w-xl mx-auto text-center space-y-6">
+          <div class="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100" id="questionCategoryTag">
+            Categoría: Números Cuánticos ➔ Orbital
+          </div>
+
+          <!-- Prompt Box -->
+          <div class="p-6 bg-gradient-to-b from-slate-50 to-indigo-50/30 rounded-2xl border border-slate-200/80">
+            <p class="text-xs sm:text-sm font-medium text-slate-500 mb-1" id="questionPromptIntro">Dado el siguiente electrón:</p>
+            <div class="text-2xl sm:text-3xl font-mono font-bold text-slate-900 tracking-wide my-3" id="questionMainDisplay">
+              (n = 4, l = 2, m<span class="badge-sub">l</span> = -1, m<span class="badge-sub">s</span> = +½)
+            </div>
+            <p class="text-xs sm:text-sm text-slate-600 font-medium" id="questionActionPrompt">Escribe el orbital correspondiente:</p>
+          </div>
+
+          <!-- Direct Text Input Container -->
+          <div id="practiceInputContainer" class="space-y-4">
+            <!-- Populated with text inputs -->
+          </div>
+
+          <!-- Submit / Next Buttons -->
+          <div class="flex items-center justify-center gap-3 pt-2">
+            <button onclick="verifyPracticeAnswer()" id="btnCheckAnswer" class="px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm shadow-md shadow-indigo-200 transition-all flex items-center gap-2">
+              <span data-i18n="btnCheck">Comprobar Respuesta</span>
+              <span class="text-[11px] opacity-75 font-mono bg-indigo-700/60 px-1.5 py-0.5 rounded">↵ Enter</span>
+            </button>
+            <button onclick="nextPracticeQuestion()" id="btnNextQuestion" class="hidden px-6 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-900 text-white font-semibold text-sm shadow-md transition-all flex items-center gap-2">
+              <span data-i18n="btnNext">Siguiente Pregunta</span>
+              <span class="text-[11px] opacity-75 font-mono bg-slate-700 px-1.5 py-0.5 rounded">↵ Enter</span>
+            </button>
+          </div>
+
+          <!-- Pedagogical Feedback Box -->
+          <div id="practiceFeedbackBox" class="hidden text-left p-4 rounded-xl border text-sm transition-all duration-300"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section Lab (Visualizador de apoyo simplificado) -->
+    <div id="section-lab" class="hidden space-y-6">
+      <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+        <h2 class="text-lg font-bold text-slate-900" data-i18n="labTitle">Laboratorio Interactivo de Orbitales Atómicos</h2>
+        <p class="text-sm text-slate-500" data-i18n="labSubtitle">Modifica los 4 números cuánticos y observa en directo cómo cambia la forma del orbital, su orientación espacial, la energía relativa y la capacidad de electrones.</p>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- Control Panel (Sliders & Selectors) -->
+        <div class="lg:col-span-5 bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-5">
+          <h3 class="text-sm font-bold uppercase tracking-wider text-indigo-700 flex items-center gap-2">
+            <span>🎛️</span> <span data-i18n="labControls">Configuración de Números Cuánticos</span>
+          </h3>
+
+          <!-- n slider -->
+          <div class="space-y-1.5">
+            <div class="flex justify-between items-center text-sm font-semibold">
+              <label for="sliderN" class="text-slate-700" data-i18n="labNLabel">Nivel Principal (n):</label>
+              <span id="displayValN" class="font-mono text-indigo-600 font-bold bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200">3</span>
+            </div>
+            <input type="range" id="sliderN" min="1" max="5" value="3" step="1" oninput="updateLabFromControls()" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600">
+            <p class="text-xs text-slate-400" data-i18n="labNDesc">Determina el volumen, tamaño del orbital y la energía principal (capa n=1 a 7).</p>
+          </div>
+
+          <!-- l selector -->
+          <div class="space-y-1.5">
+            <div class="flex justify-between items-center text-sm font-semibold">
+              <label class="text-slate-700" data-i18n="labLLabel">Momento Angular / Azimutal (l):</label>
+              <span id="displayValL" class="font-mono text-indigo-600 font-bold bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200">l = 1 (p)</span>
+            </div>
+            <div id="btnGroupL" class="grid grid-cols-4 gap-2">
+              <!-- Dynamically populated according to max allowed (n-1) -->
+            </div>
+            <p class="text-xs text-slate-400" data-i18n="labLDesc">Determina la forma geométrica del subnivel: s (l=0), p (l=1), d (l=2), f (l=3).</p>
+          </div>
+
+          <!-- ml selector -->
+          <div class="space-y-1.5">
+            <div class="flex justify-between items-center text-sm font-semibold">
+              <label class="text-slate-700" data-i18n="labMlLabel">Magnético (m<span class="badge-sub">l</span>):</label>
+              <span id="displayValMl" class="font-mono text-indigo-600 font-bold bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200">0</span>
+            </div>
+            <div id="btnGroupMl" class="flex flex-wrap gap-2">
+              <!-- Dynamically populated from -l to +l -->
+            </div>
+            <p class="text-xs text-slate-400" data-i18n="labMlDesc">Indica la orientación espacial del orbital en presencia de un campo magnético (-l ... 0 ... +l).</p>
+          </div>
+
+          <!-- ms selector -->
+          <div class="space-y-1.5">
+            <div class="flex justify-between items-center text-sm font-semibold">
+              <label class="text-slate-700" data-i18n="labMsLabel">Espín del electrón (m<span class="badge-sub">s</span> o s):</label>
+              <span id="displayValMs" class="font-mono text-indigo-600 font-bold bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200">+½ ↑</span>
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <button onclick="setLabSpin('+1/2')" id="btnSpinPlus" class="py-2 px-3 rounded-lg border border-indigo-500 bg-indigo-50 text-indigo-700 font-semibold text-xs flex items-center justify-center gap-1">
+                <span>+½</span> <span>(↑ Sentido horario)</span>
+              </button>
+              <button onclick="setLabSpin('-1/2')" id="btnSpinMinus" class="py-2 px-3 rounded-lg border border-slate-200 bg-white text-slate-700 font-medium text-xs flex items-center justify-center gap-1 hover:border-indigo-300">
+                <span>-½</span> <span>(↓ Sentido antihorario)</span>
+              </button>
+            </div>
+            <p class="text-xs text-slate-400" data-i18n="labMsDesc">Momento angular intrínseco de giro del electrón sobre su propio eje.</p>
+          </div>
+        </div>
+
+        <div class="lg:col-span-7 space-y-6">
+          <!-- Orbital Shape Canvas / SVG Visualizer -->
+          <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs flex flex-col items-center">
+            <div class="w-full flex items-center justify-between mb-4">
+              <div>
+                <span class="text-xs font-bold text-slate-400 uppercase tracking-widest" data-i18n="labOrbitalResult">Orbital Resultante</span>
+                <h4 class="text-3xl font-extrabold text-indigo-700 font-mono" id="labOrbitalName">3p</h4>
+              </div>
+              <div class="text-right">
+                <span class="text-xs text-slate-500 block" data-i18n="labSet">Cuaterna cuántica:</span>
+                <span class="font-mono text-sm font-bold bg-slate-100 text-slate-800 px-2.5 py-1 rounded-md border border-slate-200" id="labSetDisplay">(3, 1, 0, +½)</span>
+              </div>
+            </div>
+
+            <!-- SVG Visual Representation -->
+            <div class="w-full h-56 sm:h-64 bg-slate-900 rounded-xl relative flex items-center justify-center overflow-hidden shadow-inner p-4" id="labGraphicContainer">
+              <svg id="orbitalSvg" class="w-full h-full max-w-[280px] max-h-[240px]" viewBox="0 0 200 200">
+                <!-- Dynamically generated SVG for orbital shapes -->
+              </svg>
+              <div class="absolute bottom-2 left-3 text-[11px] text-slate-400 font-mono" id="labSpatialLabel">
+                Orientación: Eje Z (p<sub>z</sub>)
+              </div>
+              <div class="absolute top-2 right-3 text-[11px] text-indigo-300 font-mono bg-slate-800/80 px-2 py-0.5 rounded border border-slate-700">
+                P(electrón) &gt; 90%
+              </div>
+            </div>
+
+            <!-- Quantum Properties Grid -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 w-full mt-4 text-center">
+              <div class="p-2.5 rounded-lg bg-slate-50 border border-slate-200">
+                <span class="text-[11px] text-slate-500 block" data-i18n="propDegeneracy">Degeneración</span>
+                <span class="text-sm font-bold text-slate-800 font-mono" id="labPropDegeneracy">3 orbitales</span>
+              </div>
+              <div class="p-2.5 rounded-lg bg-slate-50 border border-slate-200">
+                <span class="text-[11px] text-slate-500 block" data-i18n="propMaxElectronsSub">Capacidad subnivel</span>
+                <span class="text-sm font-bold text-slate-800 font-mono" id="labPropMaxElectronsSub">6 e⁻ máx</span>
+              </div>
+              <div class="p-2.5 rounded-lg bg-slate-50 border border-slate-200">
+                <span class="text-[11px] text-slate-500 block" data-i18n="propMaxElectronsLevel">Capacidad nivel (2n²)</span>
+                <span class="text-sm font-bold text-slate-800 font-mono" id="labPropMaxElectronsLevel">18 e⁻ máx</span>
+              </div>
+              <div class="p-2.5 rounded-lg bg-slate-50 border border-slate-200">
+                <span class="text-[11px] text-slate-500 block" data-i18n="propEnergyRule">Regla (n + l)</span>
+                <span class="text-sm font-bold text-indigo-600 font-mono" id="labPropEnergyRule">3 + 1 = 4</span>
+              </div>
+            </div>
+
+            <!-- Pedagogical takeaway notes -->
+            <div class="mt-4 p-3 bg-amber-50 rounded-xl border border-amber-200 text-xs text-amber-900 w-full flex items-start gap-2.5">
+              <span class="text-base">💡</span>
+              <p id="labPedagogicalNote">
+                Para el nivel <strong>n=3</strong>, los valores permitidos de <strong>l</strong> van de 0 hasta 2 (subniveles 3s, 3p, 3d). El valor l=1 corresponde a orbitales tipo p con forma bilobular y nodo en el núcleo.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="section-rules" class="hidden space-y-6">
+      <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 class="text-lg font-bold text-slate-900" data-i18n="rulesTitle">¿Combinación Permitida o Prohibida? (PAU)</h2>
+          <p class="text-sm text-slate-500" data-i18n="rulesSubtitle">Justifica si los siguientes grupos de números cuánticos pueden describir un electrón en un átomo polielectrónico.</p>
+        </div>
+        <button onclick="newRulesChallenge()" class="px-4 py-2 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 rounded-lg text-xs font-bold border border-indigo-200 transition">
+          🔄 <span data-i18n="rulesNewChallenge">Nuevo Desafío</span>
+        </button>
+      </div>
+
+      <div class="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-xs max-w-3xl mx-auto">
+        <div class="text-center space-y-5">
+          <span class="text-xs uppercase tracking-widest text-slate-400 font-bold" data-i18n="rulesQuestionLabel">Cuestión de Selectividad / Examen</span>
+          
+          <div class="p-6 bg-slate-50 rounded-2xl border border-slate-200 inline-block w-full">
+            <p class="text-xs text-slate-500 mb-1" data-i18n="rulesQuestionPrompt">Evalúa la validez física de la siguiente combinación (n, l, m<span class="badge-sub">l</span>, m<span class="badge-sub">s</span>):</p>
+            <div class="text-3xl sm:text-4xl font-mono font-bold text-indigo-700 py-3" id="rulesSetDisplay">
+              (n = 3, l = 3, m<span class="badge-sub">l</span> = 0, m<span class="badge-sub">s</span> = +½)
+            </div>
+            <p class="text-sm text-slate-600" data-i18n="rulesChoosePrompt">¿Es un conjunto de números cuánticos físicamente posible para un electrón?</p>
+          </div>
+
+          <!-- Buttons for Allowed / Forbidden -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-md mx-auto pt-2">
+            <button onclick="checkRulesDecision(true)" id="btnChoiceAllowed" class="p-4 rounded-xl border-2 border-slate-200 hover:border-emerald-500 hover:bg-emerald-50/50 font-bold text-slate-700 transition flex items-center justify-center gap-2 group">
+              <span class="w-8 h-8 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-lg group-hover:scale-110 transition">✓</span>
+              <span data-i18n="choiceAllowed">SÍ, es PERMITIDO</span>
+            </button>
+            <button onclick="checkRulesDecision(false)" id="btnChoiceForbidden" class="p-4 rounded-xl border-2 border-slate-200 hover:border-rose-500 hover:bg-rose-50/50 font-bold text-slate-700 transition flex items-center justify-center gap-2 group">
+              <span class="w-8 h-8 rounded-full bg-rose-100 text-rose-700 flex items-center justify-center text-lg group-hover:scale-110 transition">✕</span>
+              <span data-i18n="choiceForbidden">NO, es PROHIBIDO</span>
+            </button>
+          </div>
+
+          <!-- Detailed Justification Panel (Shown after choosing) -->
+          <div id="rulesJustificationPanel" class="hidden text-left p-5 rounded-xl border text-sm transition-all space-y-3">
+            <!-- Injected by JS -->
+          </div>
+
+          <div class="pt-2">
+            <button onclick="newRulesChallenge()" id="btnRulesNext" class="hidden px-6 py-2.5 rounded-xl bg-slate-800 text-white font-semibold text-sm hover:bg-slate-900 transition">
+              <span data-i18n="btnNextQuestion">Siguiente Desafío</span> ➔
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="section-guide" class="hidden space-y-6">
+      <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+        <h2 class="text-lg font-bold text-slate-900" data-i18n="guideHeaderTitle">Guía Teórica PAU: Números Cuánticos y Orbitales</h2>
+        <p class="text-sm text-slate-500" data-i18n="guideHeaderSubtitle">Fundamentos de mecánica cuántica y criterios de corrección oficiales para las cuestiones de selectividad.</p>
+      </div>
+
+      <!-- Quantum Model Concept Card -->
+      <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-3">
+        <h3 class="text-base font-bold text-indigo-700 flex items-center gap-2" data-i18n="guideModelTitle">
+          <span>⚛️</span> Modelo Atómico Cuántico y Concepto de Orbital
+        </h3>
+        <p class="text-xs sm:text-sm text-slate-600 leading-relaxed" data-i18n="guideModelText">
+          El modelo mecanocuántico sustituye las órbitas circulares del modelo de Bohr por <strong>orbitales atómicos</strong> debido al Principio de Incertidumbre de Heisenberg. Un orbital atómico es la región del espacio alrededor del núcleo donde existe una <strong>probabilidad superior al 90% (P &gt; 90%)</strong> de encontrar al electrón. Matemáticamente, surge de las soluciones con significado físico de la <strong>Ecuación de Schrödinger</strong>, que imponen cuatro restricciones denominadas <strong>números cuánticos</strong>.
+        </p>
+      </div>
+
+      <!-- Quantum Numbers Table -->
+      <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs">
+        <div class="px-6 py-4 bg-slate-50 border-b border-slate-200">
+          <h3 class="font-bold text-slate-800 text-sm" data-i18n="guideTableTitle">Los Cuatro Números Cuánticos (Restricciones y Significado)</h3>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs sm:text-sm">
+            <thead class="bg-slate-100/75 text-slate-600 font-semibold border-b border-slate-200">
+              <tr>
+                <th class="p-3 sm:p-4" data-i18n="thNumber">Número Cuántico</th>
+                <th class="p-3 sm:p-4" data-i18n="thSymbol">Símbolo</th>
+                <th class="p-3 sm:p-4" data-i18n="thAllowedValues">Valores Permitidos</th>
+                <th class="p-3 sm:p-4" data-i18n="thMeaning">Significado Físico</th>
+                <th class="p-3 sm:p-4" data-i18n="thCapacity">Capacidad / Notas</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100" id="guideTableBody">
+              <!-- Inserted via JS for bilingual sync -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Key Atomic Principles Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-2">
+          <div class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-sm">1</div>
+          <h4 class="font-bold text-slate-800 text-sm" data-i18n="principlePauliTitle">Principio de Exclusión de Pauli</h4>
+          <p class="text-xs text-slate-600 leading-relaxed" data-i18n="principlePauliDesc">En un átomo no pueden existir dos electrones con los cuatro números cuánticos iguales. En un mismo orbital caben como máximo <strong>2 electrones</strong>, que deben poseer <strong>espines antiparalelos u opuestos (+½ y -½)</strong>.</p>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-2">
+          <div class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-sm">2</div>
+          <h4 class="font-bold text-slate-800 text-sm" data-i18n="principleAufbauTitle">Principio de Aufbau y Regla (n + l)</h4>
+          <p class="text-xs text-slate-600 leading-relaxed" data-i18n="principleAufbauDesc">Los electrones ocupan primero los orbitales de menor energía (diagrama de Moeller). La energía relativa de los orbitales se ordena según la suma <strong>(n + l)</strong>; en caso de empate, tiene menor energía el que posee menor valor de <strong>n</strong>.</p>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-2">
+          <div class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-sm">3</div>
+          <h4 class="font-bold text-slate-800 text-sm" data-i18n="principleHundTitle">Regla de Máxima Multiplicidad de Hund</h4>
+          <p class="text-xs text-slate-600 leading-relaxed" data-i18n="principleHundDesc">Al llenar orbitales de la misma energía (orbitales degenerados, como los 3 orbitales p o 5 d), los electrones se sitúan ocupando el mayor número posible de orbitales con <strong>espines paralelos</strong>, alcanzando así el estado más estable.</p>
+        </div>
+      </div>
+
+      <!-- PAU Exam Answering Protocol Card -->
+      <div class="bg-gradient-to-r from-indigo-50 to-purple-50 p-6 rounded-2xl border border-indigo-200 text-xs sm:text-sm space-y-3">
+        <h4 class="font-bold text-indigo-900 text-sm flex items-center gap-2" data-i18n="guidePauProtocolTitle">
+          <span>📝</span> ¿Cómo redactar la justificación en una pregunta de la PAU?
+        </h4>
+        <p class="text-indigo-800/90 leading-relaxed" data-i18n="guidePauProtocolIntro">
+          Para obtener la máxima puntuación en las preguntas de combinaciones de números cuánticos en selectividad, sigue rigurosamente esta comprobación escalonada:
+        </p>
+        <ol class="list-decimal list-inside space-y-1.5 text-indigo-900 font-medium pl-1">
+          <li><strong>Nivel principal (n):</strong> Debe ser un número entero estrictamente positivo ($n \ge 1$).</li>
+          <li><strong>Momento azimutal (l):</strong> Debe ser un número entero en el rango $0 \le l \le n - 1$. Nunca puede ser igual o superior a $n$, ni negativo.</li>
+          <li><strong>Momento magnético (m<sub>l</sub>):</strong> Debe ser un número entero comprendido entre $-l$ y $+l$ (ambos inclusive, totalizando $2l + 1$ valores).</li>
+          <li><strong>Espín (m<sub>s</sub>):</strong> Solo puede tomar los valores semienteros $+\frac{1}{2}$ o $-\frac{1}{2}$ (nunca cero ni enteros).</li>
+        </ol>
+      </div>
+    </div>
+  </main>
+
+  <div id="reportModalBackdrop" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto p-6 sm:p-8 shadow-2xl border border-slate-200" id="printReportModal">
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between pb-4 border-b border-slate-200">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-xl bg-indigo-600 text-white font-mono font-bold flex items-center justify-center">Ψ</div>
+          <div>
+            <h3 class="font-bold text-lg text-slate-900" data-i18n="reportHeaderTitle">Informe de Práctica: Números Cuánticos y Orbitales</h3>
+            <p class="text-xs text-slate-500">Química 2º Bachillerato • IEDIB / UIB</p>
+          </div>
+        </div>
+        <button onclick="closeReportModal()" class="text-slate-400 hover:text-slate-700 p-1 no-print">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <!-- Student Input Form (no-print or interactive) -->
+      <div class="py-4 border-b border-slate-100 flex flex-wrap gap-4 items-center justify-between text-xs">
+        <div class="flex items-center gap-2">
+          <label class="font-bold text-slate-700" data-i18n="reportStudent">Estudiante:</label>
+          <input type="text" id="studentNameInput" placeholder="Introduce tu nombre y apellidos" class="px-3 py-1.5 rounded-lg border border-slate-300 font-medium focus:outline-hidden focus:border-indigo-500 w-64 text-slate-800">
+        </div>
+        <div class="text-slate-500">
+          <span data-i18n="reportDate">Fecha:</span> <span id="reportDateDisplay" class="font-semibold text-slate-700"></span>
+        </div>
+        <div class="text-slate-500">
+          <span data-i18n="reportDuration">Duración:</span> <span id="reportTimeDisplay" class="font-semibold text-slate-700"></span>
+        </div>
+      </div>
+
+      <!-- Performance Stats Summary Cards -->
+      <div class="grid grid-cols-4 gap-3 py-4 text-center">
+        <div class="p-3 bg-slate-50 rounded-xl border border-slate-200">
+          <span class="text-[11px] text-slate-500 block" data-i18n="metricTotal">Realizadas</span>
+          <span class="font-bold text-lg text-slate-800" id="repTotal">0</span>
+        </div>
+        <div class="p-3 bg-emerald-50 rounded-xl border border-emerald-200">
+          <span class="text-[11px] text-emerald-700 block" data-i18n="metricScore">Aciertos</span>
+          <span class="font-bold text-lg text-emerald-700" id="repCorrect">0</span>
+        </div>
+        <div class="p-3 bg-rose-50 rounded-xl border border-rose-200">
+          <span class="text-[11px] text-rose-700 block" data-i18n="reportMistakes">Errores</span>
+          <span class="font-bold text-lg text-rose-700" id="repWrong">0</span>
+        </div>
+        <div class="p-3 bg-indigo-50 rounded-xl border border-indigo-200">
+          <span class="text-[11px] text-indigo-700 block" data-i18n="reportMaxStreak">Racha Máx</span>
+          <span class="font-bold text-lg text-indigo-700" id="repMaxStreak">0</span>
+        </div>
+      </div>
+
+      <!-- Detailed Question History Table -->
+      <div class="py-2">
+        <h4 class="font-bold text-xs uppercase tracking-wider text-slate-600 mb-2" data-i18n="reportHistoryTitle">Desglose de Ejercicios Realizados</h4>
+        <div class="overflow-x-auto max-h-64 custom-scrollbar border border-slate-200 rounded-xl">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-slate-100 text-slate-700 font-semibold sticky top-0">
+              <tr>
+                <th class="p-2.5">#</th>
+                <th class="p-2.5" data-i18n="thReportItem">Enunciado / Pregunta</th>
+                <th class="p-2.5" data-i18n="thReportAnswer">Tu Respuesta</th>
+                <th class="p-2.5" data-i18n="thReportCorrect">Solución Oficial</th>
+                <th class="p-2.5 text-center" data-i18n="thReportResult">Resultado</th>
+              </tr>
+            </thead>
+            <tbody id="reportTableBody" class="divide-y divide-slate-100">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="pt-4 mt-2 border-t border-slate-200 flex items-center justify-between no-print">
+        <p class="text-xs text-slate-400" data-i18n="reportPrintTip">Pulsa en imprimir para descargar el PDF oficial de la sesión.</p>
+        <div class="flex items-center gap-2">
+          <button onclick="closeReportModal()" class="px-4 py-2 rounded-lg border border-slate-200 text-slate-600 text-xs font-semibold hover:bg-slate-50">
+            <span data-i18n="btnClose">Cerrar</span>
+          </button>
+          <button onclick="triggerPrintPDF()" class="px-5 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-md shadow-indigo-200 flex items-center gap-1.5">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+            <span data-i18n="btnPrint">Imprimir / Guardar en PDF</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* Application State */
+    const state = {
+      lang: 'es',
+      currentTab: 'practice',
+      practiceSubmode: 'qn_to_orb', // 'qn_to_orb', 'orb_to_qn', 'mixed'
+      currentQuestion: null,
+      questionCount: 0,
+      currentRulesChallenge: null,
+      userAnswers: [],
+      stats: {
+        total: 0,
+        correct: 0,
+        streak: 0,
+        maxStreak: 0
+      },
+      timer: {
+        seconds: 0,
+        running: true,
+        intervalId: null
+      },
+      lab: {
+        n: 3,
+        l: 1,
+        ml: 0,
+        ms: '+1/2'
+      }
+    };
+
+    /* Bilingual Dictionary */
+    const I18N = {
+      es: {
+        appTitle: "CuànticLAB",
+        appSubtitle: "Números cuánticos y orbitales (2º Bachillerato)",
+        navPractice: "Entrenador Cuántico",
+        navLab: "Visualizador de Orbitales",
+        navRules: "¿Válido o Prohibido?",
+        navGuide: "Guía Teórica PAU",
+        metricTotal: "Respondidas",
+        metricScore: "Aciertos",
+        metricStreak: "Racha actual",
+        btnReportTxt: "Informe",
+        practiceTitle: "Entrenador de Números Cuánticos",
+        practiceSubtitle: "Escribe tu respuesta directamente en el campo de texto y pulsa Enter para comprobar.",
+        modeLabel: "Modalidad:",
+        submodeMixed: "Mixto",
+        btnCheck: "Comprobar Respuesta",
+        btnNext: "Siguiente Pregunta",
+        btnSkip: "Cambiar pregunta",
+        labTitle: "Visualizador Interactivo de Orbitales",
+        labSubtitle: "Comprueba la forma del orbital, su orientación espacial y la regla n + l.",
+        labControls: "Configuración de Números Cuánticos",
+        labNLabel: "Nivel Principal (n):",
+        labNDesc: "Tamaño y nivel de energía.",
+        labLLabel: "Momento Angular (l):",
+        labLDesc: "Forma del subnivel: s (0), p (1), d (2), f (3).",
+        labMlLabel: "Magnético (ml):",
+        labMlDesc: "Orientación espacial (-l a +l).",
+        labMsLabel: "Espín (ms):",
+        labMsDesc: "Giro del electrón (+½ o -½).",
+        labOrbitalResult: "Orbital Resultante",
+        labSet: "Cuaterna cuántica:",
+        propDegeneracy: "Degeneración",
+        propMaxElectronsSub: "Capacidad subnivel",
+        propMaxElectronsLevel: "Capacidad nivel (2n²)",
+        propEnergyRule: "Regla (n + l)",
+        rulesTitle: "¿Combinación Permitida o Prohibida? (PAU)",
+        rulesSubtitle: "Justifica si los siguientes grupos de números cuánticos pueden describir un electrón en un átomo.",
+        rulesNewChallenge: "Nuevo Desafío",
+        rulesQuestionLabel: "Cuestión de Examen",
+        rulesQuestionPrompt: "Evalúa la validez de la combinación (n, l, ml, ms):",
+        rulesChoosePrompt: "¿Es una combinación físicamente permitida?",
+        choiceAllowed: "SÍ, es PERMITIDO",
+        choiceForbidden: "NO, es PROHIBIDO",
+        btnNextQuestion: "Siguiente Desafío",
+        guideHeaderTitle: "Guía Teórica PAU: Números Cuánticos y Orbitales",
+        guideHeaderSubtitle: "Fundamentos de mecánica cuántica y criterios de corrección oficiales para las cuestiones de selectividad.",
+        guideModelTitle: "Modelo Atómico Cuántico y Concepto de Orbital",
+        guideModelText: "El modelo mecanocuántico sustituye las órbitas circulares del modelo de Bohr por <strong>orbitales atómicos</strong> debido al Principio de Incertidumbre de Heisenberg. Un orbital atómico es la región del espacio alrededor del núcleo donde existe una <strong>probabilidad superior al 90% (P &gt; 90%)</strong> de encontrar al electrón. Matemáticamente, surge de las soluciones con significado físico de la <strong>Ecuación de Schrödinger</strong>, que imponen cuatro restricciones denominadas <strong>números cuánticos</strong>.",
+        guideTableTitle: "Los Cuatro Números Cuánticos (Restricciones y Significado)",
+        thNumber: "Número Cuántico",
+        thSymbol: "Símbolo",
+        thAllowedValues: "Valores Permitidos",
+        thMeaning: "Significado Físico",
+        thCapacity: "Capacidad / Notas",
+        principlePauliTitle: "Principio de Exclusión de Pauli",
+        principlePauliDesc: "En un átomo no pueden existir dos electrones con los cuatro números cuánticos iguales. En un mismo orbital caben como máximo <strong>2 electrones</strong>, que deben poseer <strong>espines antiparalelos u opuestos (+½ y -½)</strong>.",
+        principleAufbauTitle: "Principio de Aufbau y Regla (n + l)",
+        principleAufbauDesc: "Los electrones ocupan primero los orbitales de menor energía (diagrama de Moeller). La energía relativa de los orbitales se ordena según la suma <strong>(n + l)</strong>; en caso de empate, tiene menor energía el que posee menor valor de <strong>n</strong>.",
+        principleHundTitle: "Regla de Máxima Multiplicidad de Hund",
+        principleHundDesc: "Al llenar orbitales de la misma energía (orbitales degenerados, como los 3 orbitales p o 5 d), los electrones se sitúan ocupando el mayor número posible de orbitales con <strong>espines paralelos</strong>, alcanzando así el estado más estable.",
+        guidePauProtocolTitle: "¿Cómo redactar la justificación en una pregunta de la PAU?",
+        guidePauProtocolIntro: "Para obtener la máxima puntuación en las preguntas de combinaciones de números cuánticos en selectividad, sigue rigurosamente esta comprobación escalonada:",
+        reportHeaderTitle: "Informe de Práctica: Números Cuánticos",
+        reportStudent: "Estudiante:",
+        reportDate: "Fecha:",
+        reportDuration: "Duración:",
+        reportMistakes: "Errores",
+        reportMaxStreak: "Racha Máx",
+        reportHistoryTitle: "Desglose de Ejercicios Realizados",
+        thReportItem: "Enunciado / Pregunta",
+        thReportAnswer: "Tu Respuesta",
+        thReportCorrect: "Solución Oficial",
+        thReportResult: "Resultado",
+        reportPrintTip: "Pulsa en imprimir para descargar el PDF de la sesión.",
+        btnClose: "Cerrar",
+        btnPrint: "Imprimir / Guardar en PDF"
+      },
+      ca: {
+        appTitle: "CuànticLAB",
+        appSubtitle: "Nombres quàntics i orbitals (2n Batxillerat)",
+        navPractice: "Entrenador Quàntic",
+        navLab: "Visualitzador d'Orbitals",
+        navRules: "Vàlid o Prohibit?",
+        navGuide: "Guia Teòrica PAU",
+        metricTotal: "Respostes",
+        metricScore: "Encerts",
+        metricStreak: "Ratxa actual",
+        btnReportTxt: "Informe",
+        practiceTitle: "Entrenador de Nombres Quàntics",
+        practiceSubtitle: "Escriu la teva resposta directament al camp de text i prem Enter per comprovar.",
+        modeLabel: "Modalitat:",
+        submodeMixed: "Mixte",
+        btnCheck: "Comprova la Resposta",
+        btnNext: "Següent Pregunta",
+        btnSkip: "Canviar pregunta",
+        labTitle: "Visualitzador Interactiu d'Orbitals",
+        labSubtitle: "Comprova la forma de l'orbital, la seva orientació espacial i la regla n + l.",
+        labControls: "Configuració de Nombres Quàntics",
+        labNLabel: "Nivell Principal (n):",
+        labNDesc: "Mida i nivell d'energia.",
+        labLLabel: "Moment Angular (l):",
+        labLDesc: "Forma del subnivell: s (0), p (1), d (2), f (3).",
+        labMlLabel: "Magnètic (ml):",
+        labMlDesc: "Orientació espacial (-l a +l).",
+        labMsLabel: "Espín (ms):",
+        labMsDesc: "Gir de l'electró (+½ o -½).",
+        labOrbitalResult: "Orbital Resultant",
+        labSet: "Quaterna quàntica:",
+        propDegeneracy: "Degeneració",
+        propMaxElectronsSub: "Capacitat subnivell",
+        propMaxElectronsLevel: "Capacitat nivell (2n²)",
+        propEnergyRule: "Regla (n + l)",
+        rulesTitle: "Combinació Permesa o Prohibida? (PAU)",
+        rulesSubtitle: "Justifica si els següents grups de nombres quàntics poden descriure un electró en un àtom.",
+        rulesNewChallenge: "Nou Desafiament",
+        rulesQuestionLabel: "Qüestió d'Examen",
+        rulesQuestionPrompt: "Avalua la validesa de la combinació (n, l, ml, ms):",
+        rulesChoosePrompt: "És una combinació físicament permesa?",
+        choiceAllowed: "SÍ, és PERMÈS",
+        choiceForbidden: "NO, és PROHIBIT",
+        btnNextQuestion: "Següent Desafiament",
+        guideHeaderTitle: "Guia Teòrica PAU: Nombres Quàntics i Orbitals",
+        guideHeaderSubtitle: "Fonaments de mecànica quàntica i criteris de correcció oficials per a les qüestions de selectivitat.",
+        guideModelTitle: "Model Atòmic Quàntic i Concepte d'Orbital",
+        guideModelText: "El model mecanocuàntic substitueix les òrbites circulars del model de Bohr per <strong>orbitals atòmics</strong> a causa del Principi d'Incertesa de Heisenberg. Un orbital atòmic és la regió de l'espai al voltant del nucli on hi ha una <strong>probabilitat superior al 90% (P &gt; 90%)</strong> de trobar-hi l'electró. Matemàticament, sorgeix de les solucions amb significat físic de l'<strong>Equació de Schrödinger</strong>, que imposen quatre restriccions conegudes com a <strong>nombres quàntics</strong>.",
+        guideTableTitle: "Els Quatre Nombres Quàntics (Restriccions i Significat)",
+        thNumber: "Nombre Quàntic",
+        thSymbol: "Símbol",
+        thAllowedValues: "Valors Permesos",
+        thMeaning: "Significat Físic",
+        thCapacity: "Capacitat / Notes",
+        principlePauliTitle: "Principi d'Exclusió de Pauli",
+        principlePauliDesc: "En un àtom no poden existir dos electrons amb els quatre nombres quàntics iguals. En un mateix orbital hi caben com a màxim <strong>2 electrons</strong>, que han de posseir <strong>espins antiparal·lels o oposats (+½ i -½)</strong>.",
+        principleAufbauTitle: "Principi d'Aufbau i Regla (n + l)",
+        principleAufbauDesc: "Els electrons ocupen primer els orbitals de menor energia (diagrama de Moeller). L'energia relativa dels orbitals s'ordena segons la suma <strong>(n + l)</strong>; en cas d'empat, té menys energia el que té menor valor de <strong>n</strong>.",
+        principleHundTitle: "Regla de Màxima Multiplicitat de Hund",
+        principleHundDesc: "En omplir orbitals de la mateixa energia (orbitals degenerats, com els 3 orbitals p o 5 d), els electrons se situen ocupant el major nombre possible d'orbitals amb <strong>espins paral·lels</strong>, aconseguint així l'estat més estable.",
+        guidePauProtocolTitle: "Com redactar la justificació en una pregunta de les PAU?",
+        guidePauProtocolIntro: "Per obtenir la màxima puntuació en les preguntes de combinacions de nombres quàntics a selectivitat, segueix rigorosament aquesta comprovació esglaonada:",
+        reportHeaderTitle: "Informe de Pràctica: Nombres Quàntics",
+        reportStudent: "Estudiant:",
+        reportDate: "Data:",
+        reportDuration: "Durada:",
+        reportMistakes: "Errors",
+        reportMaxStreak: "Ratxa Màx",
+        reportHistoryTitle: "Desglossament d'Exercicis Realitzats",
+        thReportItem: "Enunciat / Pregunta",
+        thReportAnswer: "La teva Resposta",
+        thReportCorrect: "Solució Oficial",
+        thReportResult: "Resultat",
+        reportPrintTip: "Prem imprimir per descarregar el PDF de la sessió.",
+        btnClose: "Tancar",
+        btnPrint: "Imprimir / Desar en PDF"
+      }
+    };
+
+    const SUBSHELLS = [
+      { l: 0, letter: 's', name_es: 'sharp (esférico)', name_ca: 'sharp (esfèric)', orbitals: 1, maxE: 2 },
+      { l: 1, letter: 'p', name_es: 'principal (bilobular)', name_ca: 'principal (bilobular)', orbitals: 3, maxE: 6 },
+      { l: 2, letter: 'd', name_es: 'diffuse (tetralobular)', name_ca: 'diffuse (tetralobular)', orbitals: 5, maxE: 10 },
+      { l: 3, letter: 'f', name_es: 'fundamental (complejo)', name_ca: 'fundamental (complex)', orbitals: 7, maxE: 14 }
+    ];
+
+    function generatePracticeQuestion(submode) {
+      let modeToUse = submode;
+      if (modeToUse === 'mixed') {
+        modeToUse = Math.random() > 0.5 ? 'qn_to_orb' : 'orb_to_qn';
+      }
+
+      const prev = state.currentQuestion;
+      let newQ = null;
+      let attempts = 0;
+
+      // Ensure that we generate a question distinct from the previous one
+      do {
+        if (modeToUse === 'qn_to_orb') {
+          // n between 1 and 5 for a rich variety of realistic subshells
+          const n = Math.floor(Math.random() * 5) + 1;
+          const maxL = Math.min(n - 1, 3);
+          const l = Math.floor(Math.random() * (maxL + 1));
+          const ml = Math.floor(Math.random() * (2 * l + 1)) - l;
+          const ms = Math.random() > 0.5 ? '+½' : '-½';
+          const letter = SUBSHELLS[l].letter;
+          const orbitalName = `${n}${letter}`;
+
+          newQ = {
+            type: 'qn_to_orb',
+            n, l, ml, ms,
+            orbitalName,
+            correctAnswer: orbitalName,
+            explanation_es: `Para n = ${n} y l = ${l}, el subnivel azimutal es '${letter}'. Por tanto, el orbital es '${orbitalName}'.`,
+            explanation_ca: `Per a n = ${n} i l = ${l}, el subnivell azimutal és '${letter}'. Per tant, l'orbital és '${orbitalName}'.`
+          };
+        } else {
+          // orb_to_qn: pick n from 1 to 5
+          const n = Math.floor(Math.random() * 5) + 1;
+          const maxL = Math.min(n - 1, 3);
+          const l = Math.floor(Math.random() * (maxL + 1));
+          const letter = SUBSHELLS[l].letter;
+          const orbitalName = `${n}${letter}`;
+
+          newQ = {
+            type: 'orb_to_qn',
+            n, l, letter,
+            orbitalName,
+            correctN: n,
+            correctL: l,
+            explanation_es: `Para el orbital ${orbitalName}: el nivel principal es n = ${n} y para el subnivel '${letter}', l = ${l} (orientaciones mₗ desde -${l} hasta +${l}).`,
+            explanation_ca: `Per a l'orbital ${orbitalName}: el nivell principal és n = ${n} i per al subnivell '${letter}', l = ${l} (orientacions mₗ des de -${l} fins a +${l}).`
+          };
+        }
+        attempts++;
+      } while (
+        prev &&
+        attempts < 25 &&
+        (
+          (newQ.type === prev.type && newQ.type === 'qn_to_orb' && newQ.n === prev.n && newQ.l === prev.l && newQ.ml === prev.ml && newQ.ms === prev.ms) ||
+          (newQ.type === prev.type && newQ.type === 'orb_to_qn' && newQ.orbitalName === prev.orbitalName)
+        )
+      );
+
+      return newQ;
+    }
+
+    function renderPracticeQuestion() {
+      const q = state.currentQuestion;
+      const isEs = state.lang === 'es';
+      const container = document.getElementById('practiceInputContainer');
+      const tag = document.getElementById('questionCategoryTag');
+      const counterBadge = document.getElementById('questionCounterBadge');
+      const promptBox = document.getElementById('practicePromptBox');
+      const intro = document.getElementById('questionPromptIntro');
+      const main = document.getElementById('questionMainDisplay');
+      const action = document.getElementById('questionActionPrompt');
+      const fbBox = document.getElementById('practiceFeedbackBox');
+      const btnCheck = document.getElementById('btnCheckAnswer');
+      const btnNext = document.getElementById('btnNextQuestion');
+
+      state.questionCount++;
+      if (counterBadge) counterBadge.textContent = `#${state.questionCount}`;
+
+      // Reset feedback and action buttons
+      fbBox.className = 'hidden';
+      fbBox.innerHTML = '';
+      btnCheck.classList.remove('hidden');
+      btnNext.classList.add('hidden');
+
+      // Subtle flash animation on the prompt box to confirm question change
+      if (promptBox) {
+        promptBox.classList.add('scale-[0.98]', 'opacity-70');
+        setTimeout(() => {
+          promptBox.classList.remove('scale-[0.98]', 'opacity-70');
+        }, 120);
+      }
+
+      if (q.type === 'qn_to_orb') {
+        tag.textContent = isEs ? 'Modalidad: Números Cuánticos ➔ Orbital' : 'Modalitat: Nombres Quàntics ➔ Orbital';
+        intro.textContent = isEs 
+          ? 'Dado el siguiente electrón:'
+          : 'Donat el següent electró:';
+        
+        main.innerHTML = `(n = ${q.n}, l = ${q.l}, m<span class="badge-sub">l</span> = ${q.ml}, m<span class="badge-sub">s</span> = ${q.ms})`;
+        
+        action.textContent = isEs
+          ? 'Escribe el orbital resultante:'
+          : 'Escriu l\'orbital resultant:';
+
+        container.innerHTML = `
+          <div class="max-w-xs mx-auto">
+            <input type="text" id="practiceInputOrbital" autocomplete="off" placeholder="${isEs ? 'Ej: 2p, 3d...' : 'Ex: 2p, 3d...'}"
+              class="w-full text-center py-3 px-4 text-2xl font-mono font-bold tracking-wider rounded-xl border-2 border-slate-300 focus:outline-hidden focus:border-indigo-600 bg-white shadow-inner uppercase"
+              onkeydown="handlePracticeKey(event)">
+          </div>
+        `;
+
+        setTimeout(() => {
+          const el = document.getElementById('practiceInputOrbital');
+          if (el) el.focus();
+        }, 50);
+
+      } else {
+        // orb_to_qn
+        tag.textContent = isEs ? 'Modalidad: Orbital ➔ Números Cuánticos' : 'Modalitat: Orbital ➔ Nombres Quàntics';
+        intro.textContent = isEs 
+          ? 'Dado el siguiente orbital atómico:'
+          : 'Donat el següent orbital atòmic:';
+        
+        main.innerHTML = `<span class="px-6 py-1.5 bg-indigo-100 text-indigo-700 rounded-2xl border border-indigo-200 shadow-inner">${q.orbitalName}</span>`;
+        
+        action.textContent = isEs
+          ? 'Indica los valores de n y l:'
+          : 'Indica els valors de n i l:';
+
+        container.innerHTML = `
+          <div class="grid grid-cols-2 gap-4 max-w-xs mx-auto">
+            <div class="space-y-1 text-left">
+              <label class="text-xs font-bold text-slate-600">Nivel (n):</label>
+              <input type="number" id="inputN" min="1" max="7" placeholder="n" autocomplete="off"
+                class="w-full text-center py-2.5 px-3 text-lg font-mono font-bold rounded-xl border-2 border-slate-300 focus:outline-hidden focus:border-indigo-600 bg-white"
+                onkeydown="handlePracticeKey(event)">
+            </div>
+            <div class="space-y-1 text-left">
+              <label class="text-xs font-bold text-slate-600">Azimutal (l):</label>
+              <input type="number" id="inputL" min="0" max="3" placeholder="l" autocomplete="off"
+                class="w-full text-center py-2.5 px-3 text-lg font-mono font-bold rounded-xl border-2 border-slate-300 focus:outline-hidden focus:border-indigo-600 bg-white"
+                onkeydown="handlePracticeKey(event)">
+            </div>
+          </div>
+        `;
+
+        setTimeout(() => {
+          const el = document.getElementById('inputN');
+          if (el) el.focus();
+        }, 50);
+      }
+    }
+
+    function skipPracticeQuestion() {
+      nextPracticeQuestion();
+    }
+
+    function handlePracticeKey(event) {
+      if (event.key === 'Enter') {
+        const btnNext = document.getElementById('btnNextQuestion');
+        if (!btnNext.classList.contains('hidden')) {
+          nextPracticeQuestion();
+        } else {
+          verifyPracticeAnswer();
+        }
+      }
+    }
+
+    function verifyPracticeAnswer() {
+      const q = state.currentQuestion;
+      const isEs = state.lang === 'es';
+      let isCorrect = false;
+      let userAnswerText = '';
+      let correctAnswerText = '';
+
+      if (q.type === 'qn_to_orb') {
+        const input = document.getElementById('practiceInputOrbital');
+        const userVal = (input.value || '').trim().toLowerCase().replace(/\s+/g, '');
+        if (!userVal) {
+          showToast(isEs ? 'Escribe el nombre del orbital.' : 'Escriu el nom de l\'orbital.');
+          return;
+        }
+        userAnswerText = userVal;
+        correctAnswerText = q.correctAnswer.toLowerCase();
+        isCorrect = (userVal === correctAnswerText);
+      } else {
+        const userN = document.getElementById('inputN').value.trim();
+        const userL = document.getElementById('inputL').value.trim();
+
+        if (userN === '' || userL === '') {
+          showToast(isEs ? 'Completa los valores de n y l.' : 'Completa els valors de n i l.');
+          return;
+        }
+
+        userAnswerText = `n=${userN}, l=${userL}`;
+        correctAnswerText = `n=${q.correctN}, l=${q.correctL}`;
+        isCorrect = (parseInt(userN, 10) === q.correctN && parseInt(userL, 10) === q.correctL);
+      }
+
+      state.stats.total++;
+      if (isCorrect) {
+        state.stats.correct++;
+        state.stats.streak++;
+        if (state.stats.streak > state.stats.maxStreak) {
+          state.stats.maxStreak = state.stats.streak;
+        }
+      } else {
+        state.stats.streak = 0;
+      }
+
+      state.userAnswers.push({
+        prompt: q.type === 'qn_to_orb' ? `(n=${q.n}, l=${q.l}, ml=${q.ml}, ms=${q.ms})` : `Orbital ${q.orbitalName}`,
+        userAnswer: userAnswerText,
+        correctAnswer: correctAnswerText,
+        isCorrect
+      });
+
+      updateScoreboardUI();
+
+      const fbBox = document.getElementById('practiceFeedbackBox');
+      const btnCheck = document.getElementById('btnCheckAnswer');
+      const btnNext = document.getElementById('btnNextQuestion');
+
+      btnCheck.classList.add('hidden');
+      btnNext.classList.remove('hidden');
+      fbBox.classList.remove('hidden');
+
+      const exp = isEs ? q.explanation_es : q.explanation_ca;
+
+      if (isCorrect) {
+        fbBox.className = 'text-left p-4 rounded-xl border text-sm transition-all bg-emerald-50 border-emerald-200 text-emerald-900';
+        fbBox.innerHTML = `
+          <div class="flex items-start gap-2.5">
+            <span class="text-xl">🎉</span>
+            <div>
+              <p class="font-bold text-emerald-800">${isEs ? '¡Correcto!' : 'Correcte!'}</p>
+              <p class="mt-1 text-xs text-emerald-700 leading-relaxed">${exp}</p>
+            </div>
+          </div>
+        `;
+      } else {
+        fbBox.className = 'text-left p-4 rounded-xl border text-sm transition-all bg-rose-50 border-rose-200 text-rose-900';
+        fbBox.innerHTML = `
+          <div class="flex items-start gap-2.5">
+            <span class="text-xl">⚠️</span>
+            <div>
+              <p class="font-bold text-rose-800">${isEs ? 'Incorrecto' : 'Incorrecte'}</p>
+              <p class="text-xs text-rose-700 mt-0.5">${isEs ? 'Respuesta correcta:' : 'Resposta correcta:'} <strong class="font-mono text-slate-800">${correctAnswerText}</strong></p>
+              <p class="mt-1.5 text-xs text-slate-700 leading-relaxed">${exp}</p>
+            </div>
+          </div>
+        `;
+      }
+
+      btnNext.focus();
+    }
+
+    function nextPracticeQuestion() {
+      state.currentQuestion = generatePracticeQuestion(state.practiceSubmode);
+      renderPracticeQuestion();
+    }
+
+    function setPracticeSubmode(mode) {
+      state.practiceSubmode = mode;
+      document.getElementById('btnSubmode1').className = mode === 'qn_to_orb' ? 'px-2.5 py-1.5 rounded-md bg-white text-indigo-600 shadow-xs font-semibold transition' : 'px-2.5 py-1.5 rounded-md text-slate-600 hover:text-slate-900 transition';
+      document.getElementById('btnSubmode2').className = mode === 'orb_to_qn' ? 'px-2.5 py-1.5 rounded-md bg-white text-indigo-600 shadow-xs font-semibold transition' : 'px-2.5 py-1.5 rounded-md text-slate-600 hover:text-slate-900 transition';
+      document.getElementById('btnSubmode3').className = mode === 'mixed' ? 'px-2.5 py-1.5 rounded-md bg-white text-indigo-600 shadow-xs font-semibold transition' : 'px-2.5 py-1.5 rounded-md text-slate-600 hover:text-slate-900 transition';
+      nextPracticeQuestion();
+    }
+
+    function generateRulesChallenge() {
+      const isValid = Math.random() > 0.5;
+
+      if (isValid) {
+        const n = Math.floor(Math.random() * 4) + 1;
+        const l = Math.floor(Math.random() * n);
+        const ml = Math.floor(Math.random() * (2 * l + 1)) - l;
+        const ms = Math.random() > 0.5 ? '+½' : '-½';
+
+        return {
+          n, l, ml, ms,
+          isValid: true,
+          justification_es: `✓ PERMITIDA: n=${n} ≥ 1; l=${l} < n; ml=${ml} está entre -${l} y +${l}; y ms=${ms} es semientero.`,
+          justification_ca: `✓ PERMESA: n=${n} ≥ 1; l=${l} < n; ml=${ml} està entre -${l} i +${l}; i ms=${ms} és semienter.`
+        };
+      } else {
+        const errType = Math.floor(Math.random() * 3);
+        let n = Math.floor(Math.random() * 3) + 1;
+        let l = 0;
+        let ml = 0;
+        let ms = '+½';
+        let errorMsg_es = '';
+        let errorMsg_ca = '';
+
+        if (errType === 0) {
+          l = n; // l >= n prohibido
+          errorMsg_es = `l no puede ser igual ni mayor que n (l=${l}, n=${n}). El máximo de l es n - 1 = ${n - 1}.`;
+          errorMsg_ca = `l no pot ser igual ni major que n (l=${l}, n=${n}). El màxim de l és n - 1 = ${n - 1}.`;
+        } else if (errType === 1) {
+          l = 1;
+          ml = Math.random() > 0.5 ? 2 : -2; // ml fuera de rango
+          errorMsg_es = `ml=${ml} está fuera del rango permitido [-${l}, +${l}].`;
+          errorMsg_ca = `ml=${ml} està fora del rang permès [-${l}, +${l}].`;
+        } else {
+          l = 0;
+          ms = '0'; // spin invalido
+          errorMsg_es = `ms solo puede ser +½ o -½ (nunca 0 ni enteros).`;
+          errorMsg_ca = `ms només pot ser +½ o -½ (mai 0 ni enters).`;
+        }
+
+        return {
+          n, l, ml, ms,
+          isValid: false,
+          justification_es: `✕ PROHIBIDA: ${errorMsg_es}`,
+          justification_ca: `✕ PROHIBIDA: ${errorMsg_ca}`
+        };
+      }
+    }
+
+    function newRulesChallenge() {
+      state.currentRulesChallenge = generateRulesChallenge();
+      const ch = state.currentRulesChallenge;
+      document.getElementById('rulesSetDisplay').innerHTML = `(n = ${ch.n}, l = ${ch.l}, m<span class="badge-sub">l</span> = ${ch.ml}, m<span class="badge-sub">s</span> = ${ch.ms})`;
+      
+      const panel = document.getElementById('rulesJustificationPanel');
+      panel.className = 'hidden';
+      panel.innerHTML = '';
+
+      document.getElementById('btnChoiceAllowed').disabled = false;
+      document.getElementById('btnChoiceForbidden').disabled = false;
+      document.getElementById('btnChoiceAllowed').className = 'p-4 rounded-xl border-2 border-slate-200 hover:border-emerald-500 hover:bg-emerald-50/50 font-bold text-slate-700 transition flex items-center justify-center gap-2 group';
+      document.getElementById('btnChoiceForbidden').className = 'p-4 rounded-xl border-2 border-slate-200 hover:border-rose-500 hover:bg-rose-50/50 font-bold text-slate-700 transition flex items-center justify-center gap-2 group';
+      document.getElementById('btnRulesNext').classList.add('hidden');
+    }
+
+    function checkRulesDecision(userSaidAllowed) {
+      const ch = state.currentRulesChallenge;
+      const isEs = state.lang === 'es';
+      const isCorrect = (userSaidAllowed === ch.isValid);
+
+      document.getElementById('btnChoiceAllowed').disabled = true;
+      document.getElementById('btnChoiceForbidden').disabled = true;
+
+      state.stats.total++;
+      if (isCorrect) {
+        state.stats.correct++;
+        state.stats.streak++;
+        if (state.stats.streak > state.stats.maxStreak) {
+          state.stats.maxStreak = state.stats.streak;
+        }
+      } else {
+        state.stats.streak = 0;
+      }
+
+      state.userAnswers.push({
+        prompt: `¿(n=${ch.n}, l=${ch.l}, ml=${ch.ml}, ms=${ch.ms}) es permitido?`,
+        userAnswer: userSaidAllowed ? (isEs ? 'Permitido' : 'Permès') : (isEs ? 'Prohibido' : 'Prohibit'),
+        correctAnswer: ch.isValid ? (isEs ? 'Permitido' : 'Permès') : (isEs ? 'Prohibido' : 'Prohibit'),
+        isCorrect
+      });
+
+      updateScoreboardUI();
+
+      const panel = document.getElementById('rulesJustificationPanel');
+      panel.classList.remove('hidden');
+      const text = isEs ? ch.justification_es : ch.justification_ca;
+      panel.className = `text-left p-4 rounded-xl border text-sm transition-all space-y-1.5 ${isCorrect ? 'bg-emerald-50 border-emerald-200 text-emerald-950' : 'bg-rose-50 border-rose-200 text-rose-950'}`;
+      panel.innerHTML = `
+        <div class="flex items-center gap-2">
+          <span class="text-lg">${isCorrect ? '🎯' : '⚠️'}</span>
+          <span class="font-bold text-sm">${isCorrect ? (isEs ? '¡Dictamen Correcto!' : 'Dictamen Correcte!') : (isEs ? 'Dictamen Incorrecto' : 'Dictamen Incorrecte')}</span>
+        </div>
+        <p class="text-xs leading-relaxed font-sans">${text}</p>
+      `;
+
+      document.getElementById('btnRulesNext').classList.remove('hidden');
+    }
+
+    function updateScoreboardUI() {
+      const { total, correct, streak } = state.stats;
+      document.getElementById('statTotal').textContent = total;
+      document.getElementById('statCorrect').textContent = correct;
+      document.getElementById('statStreak').textContent = `${streak} 🔥`;
+    }
+
+    function switchTab(tabId) {
+      state.currentTab = tabId;
+      const tabs = ['practice', 'rules', 'lab', 'guide'];
+      tabs.forEach(t => {
+        const sec = document.getElementById(`section-${t}`);
+        const btn = document.getElementById(`tab-${t}`);
+        if (sec && btn) {
+          if (t === tabId) {
+            sec.classList.remove('hidden');
+            btn.className = 'tab-btn py-2 px-3 border-b-2 border-indigo-600 font-semibold text-indigo-600 whitespace-nowrap flex items-center gap-2';
+          } else {
+            sec.classList.add('hidden');
+            btn.className = 'tab-btn py-2 px-3 border-b-2 border-transparent font-medium text-slate-600 hover:text-indigo-600 whitespace-nowrap flex items-center gap-2';
+          }
+        }
+      });
+      if (tabId === 'guide') {
+        renderGuideTable();
+      }
+    }
+
+    function renderGuideTable() {
+      const tbody = document.getElementById('guideTableBody');
+      if (!tbody) return;
+      const isEs = state.lang === 'es';
+
+      const rows = isEs ? [
+        {
+          name: 'Principal',
+          symbol: 'n',
+          values: '1, 2, 3, 4, ... (enteros positivos)',
+          meaning: 'Determina el volumen, tamaño del orbital y el nivel de energía principal.',
+          notes: 'Capacidad máxima de electrones por nivel = 2n² (ej: n=3 → 18 e⁻).'
+        },
+        {
+          name: 'Momento Angular / Azimutal',
+          symbol: 'l',
+          values: '0, 1, 2, ..., (n - 1)',
+          meaning: 'Determina la forma geométrica del subnivel orbital.',
+          notes: 'l=0 (s, esfera), l=1 (p, bilobular), l=2 (d, tetralobular), l=3 (f, complejo). Capacidad subnivel = 2(2l+1).'
+        },
+        {
+          name: 'Magnético',
+          symbol: 'm<sub>l</sub>',
+          values: '-l, ..., 0, ..., +l (2l + 1 valores)',
+          meaning: 'Indica la orientación espacial del orbital bajo un campo magnético exterior.',
+          notes: 'Número de orbitales por subnivel: s=1, p=3 (px, py, pz), d=5, f=7.'
+        },
+        {
+          name: 'Espín del electrón',
+          symbol: 'm<sub>s</sub>',
+          values: '+½, -½',
+          meaning: 'Sentido del momento angular intrínseco de giro del electrón sobre su eje.',
+          notes: 'Permite que 2 electrones coexistan en un orbital con espines opuestos (Pauli).'
+        }
+      ] : [
+        {
+          name: 'Principal',
+          symbol: 'n',
+          values: '1, 2, 3, 4, ... (enters positius)',
+          meaning: 'Determina el volum, la mida de l\'orbital i el nivell d\'energia principal.',
+          notes: 'Capacitat màxima d\'electrons per nivell = 2n² (ex: n=3 → 18 e⁻).'
+        },
+        {
+          name: 'Moment Angular / Azimutal',
+          symbol: 'l',
+          values: '0, 1, 2, ..., (n - 1)',
+          meaning: 'Determina la forma geomètrica del subnivell orbital.',
+          notes: 'l=0 (s, esfera), l=1 (p, bilobular), l=2 (d, tetralobular), l=3 (f, complex). Capacitat subnivell = 2(2l+1).'
+        },
+        {
+          name: 'Magnètic',
+          symbol: 'm<sub>l</sub>',
+          values: '-l, ..., 0, ..., +l (2l + 1 valors)',
+          meaning: 'Indica l\'orientació espacial de l\'orbital sota un camp magnètic exterior.',
+          notes: 'Nombre d\'orbitals per subnivell: s=1, p=3 (px, py, pz), d=5, f=7.'
+        },
+        {
+          name: 'Espín de l\'electró',
+          symbol: 'm<sub>s</sub>',
+          values: '+½, -½',
+          meaning: 'Sentit del moment angular intrínsec de gir de l\'electró sobre el seu propi eix.',
+          notes: 'Permet que 2 electrons coexisteixin en un mateix orbital amb espins oposats (Pauli).'
+        }
+      ];
+
+      tbody.innerHTML = rows.map(r => `
+        <tr class="hover:bg-slate-50 transition-colors">
+          <td class="p-3 sm:p-4 font-bold text-slate-800">${r.name}</td>
+          <td class="p-3 sm:p-4 font-mono font-bold text-indigo-700 bg-indigo-50/50">${r.symbol}</td>
+          <td class="p-3 sm:p-4 font-mono text-slate-700 font-semibold">${r.values}</td>
+          <td class="p-3 sm:p-4 text-slate-600">${r.meaning}</td>
+          <td class="p-3 sm:p-4 text-xs text-slate-500 font-medium">${r.notes}</td>
+        </tr>
+      `).join('');
+    }
+
+    function setLanguage(lang) {
+      state.lang = lang;
+      const isEs = lang === 'es';
+
+      document.getElementById('langEsBtn').className = isEs 
+        ? 'px-2.5 py-1 rounded-md transition-all bg-white text-indigo-700 shadow-xs' 
+        : 'px-2.5 py-1 rounded-md transition-all text-slate-600 hover:text-slate-900';
+      document.getElementById('langCaBtn').className = !isEs 
+        ? 'px-2.5 py-1 rounded-md transition-all bg-white text-indigo-700 shadow-xs' 
+        : 'px-2.5 py-1 rounded-md transition-all text-slate-600 hover:text-slate-900';
+
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (I18N[lang] && I18N[lang][key]) {
+          el.innerHTML = I18N[lang][key];
+        }
+      });
+
+      document.getElementById('appSubtitle').textContent = I18N[lang].appSubtitle;
+
+      if (state.currentQuestion) {
+        renderPracticeQuestion();
+      }
+      updateLabControls();
+      renderGuideTable();
+    }
+
+    function formatTime(totalSeconds) {
+      const mins = Math.floor(totalSeconds / 60);
+      const secs = totalSeconds % 60;
+      return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+    }
+
+    function startTimerLoop() {
+      if (state.timer.intervalId) clearInterval(state.timer.intervalId);
+      state.timer.intervalId = setInterval(() => {
+        if (state.timer.running) {
+          state.timer.seconds++;
+          const timerDisplay = document.getElementById('timerDisplay');
+          if (timerDisplay) {
+            timerDisplay.textContent = formatTime(state.timer.seconds);
+          }
+        }
+      }, 1000);
+    }
+
+    function toggleTimer() {
+      state.timer.running = !state.timer.running;
+      const icon = document.getElementById('timerIcon');
+      if (icon) {
+        if (state.timer.running) {
+          icon.innerHTML = `<path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"/>`;
+        } else {
+          icon.innerHTML = `<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"/>`;
+        }
+      }
+    }
+
+    function showToast(message) {
+      let toast = document.getElementById('appToast');
+      if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'appToast';
+        toast.className = 'fixed bottom-5 right-5 z-50 bg-slate-900 text-white px-4 py-2.5 rounded-xl shadow-lg text-xs font-semibold transition-opacity duration-300 opacity-0 pointer-events-none flex items-center gap-2';
+        document.body.appendChild(toast);
+      }
+      toast.textContent = message;
+      toast.classList.remove('opacity-0');
+      toast.classList.add('opacity-100');
+      setTimeout(() => {
+        toast.classList.remove('opacity-100');
+        toast.classList.add('opacity-0');
+      }, 2500);
+    }
+
+    function openReportModal() {
+      const modal = document.getElementById('reportModalBackdrop');
+      if (!modal) return;
+
+      const now = new Date();
+      const dateEl = document.getElementById('reportDateDisplay');
+      const timeEl = document.getElementById('reportTimeDisplay');
+      if (dateEl) dateEl.textContent = now.toLocaleDateString() + ' ' + now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      if (timeEl) timeEl.textContent = formatTime(state.timer.seconds);
+
+      const repTotal = document.getElementById('repTotal');
+      const repCorrect = document.getElementById('repCorrect');
+      const repWrong = document.getElementById('repWrong');
+      const repMaxStreak = document.getElementById('repMaxStreak');
+
+      if (repTotal) repTotal.textContent = state.stats.total;
+      if (repCorrect) repCorrect.textContent = state.stats.correct;
+      if (repWrong) repWrong.textContent = Math.max(0, state.stats.total - state.stats.correct);
+      if (repMaxStreak) repMaxStreak.textContent = state.stats.maxStreak;
+
+      const tbody = document.getElementById('reportTableBody');
+      if (tbody) {
+        tbody.innerHTML = '';
+        if (state.userAnswers.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-400 text-xs italic">${state.lang === 'es' ? 'No hay ejercicios registrados en esta sesión.' : 'No hi ha exercicis registrats en aquesta sessió.'}</td></tr>`;
+        } else {
+          state.userAnswers.forEach((ans, idx) => {
+            const tr = document.createElement('tr');
+            tr.className = ans.isCorrect ? 'bg-emerald-50/40' : 'bg-rose-50/40';
+            tr.innerHTML = `
+              <td class="p-2.5 font-mono text-slate-500">${idx + 1}</td>
+              <td class="p-2.5 font-medium text-slate-800">${ans.prompt}</td>
+              <td class="p-2.5 font-mono ${ans.isCorrect ? 'text-emerald-700 font-semibold' : 'text-rose-700 font-bold'}">${ans.userAnswer}</td>
+              <td class="p-2.5 font-mono text-slate-700">${ans.correctAnswer}</td>
+              <td class="p-2.5 text-center text-sm">${ans.isCorrect ? '✅' : '❌'}</td>
+            `;
+            tbody.appendChild(tr);
+          });
+        }
+      }
+
+      modal.classList.remove('hidden');
+    }
+
+    function closeReportModal() {
+      const modal = document.getElementById('reportModalBackdrop');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    function triggerPrintPDF() {
+      window.print();
+    }
+
+    function updateLabFromControls() {
+      const slider = document.getElementById('sliderN');
+      if (slider) {
+        state.lab.n = parseInt(slider.value, 10);
+      }
+      updateLabControls();
+    }
+
+    function setLabL(lVal) {
+      state.lab.l = lVal;
+      // Adjust ml if outside range [-l, l]
+      if (state.lab.ml > lVal) state.lab.ml = lVal;
+      if (state.lab.ml < -lVal) state.lab.ml = -lVal;
+      updateLabControls();
+    }
+
+    function setLabMl(mlVal) {
+      state.lab.ml = mlVal;
+      updateLabControls();
+    }
+
+    function setLabSpin(msVal) {
+      state.lab.ms = msVal;
+      updateLabControls();
+    }
+
+    function updateLabControls() {
+      const { n, l, ml, ms } = state.lab;
+      const isEs = state.lang === 'es';
+
+      // Clamp l to max allowed: min(n - 1, 3)
+      const maxL = Math.min(n - 1, 3);
+      if (state.lab.l > maxL) {
+        state.lab.l = maxL;
+      }
+      const currentL = state.lab.l;
+
+      // Clamp ml to [-currentL, +currentL]
+      if (state.lab.ml > currentL) state.lab.ml = currentL;
+      if (state.lab.ml < -currentL) state.lab.ml = -currentL;
+      const currentMl = state.lab.ml;
+
+      // Update N display
+      const dispN = document.getElementById('displayValN');
+      if (dispN) dispN.textContent = n;
+
+      // Update L display and buttons
+      const dispL = document.getElementById('displayValL');
+      const letter = SUBSHELLS[currentL].letter;
+      if (dispL) dispL.textContent = `l = ${currentL} (${letter})`;
+
+      const btnGroupL = document.getElementById('btnGroupL');
+      if (btnGroupL) {
+        btnGroupL.innerHTML = '';
+        for (let i = 0; i <= maxL; i++) {
+          const btn = document.createElement('button');
+          const isSelected = i === currentL;
+          btn.className = `py-1.5 px-2 rounded-lg text-xs font-mono font-bold border transition ${
+            isSelected
+              ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
+              : 'bg-white text-slate-700 border-slate-200 hover:border-indigo-300'
+          }`;
+          btn.textContent = `${i} (${SUBSHELLS[i].letter})`;
+          btn.onclick = () => setLabL(i);
+          btnGroupL.appendChild(btn);
+        }
+      }
+
+      // Update ml display and buttons
+      const dispMl = document.getElementById('displayValMl');
+      if (dispMl) dispMl.textContent = currentMl > 0 ? `+${currentMl}` : `${currentMl}`;
+
+      const btnGroupMl = document.getElementById('btnGroupMl');
+      if (btnGroupMl) {
+        btnGroupMl.innerHTML = '';
+        for (let m = -currentL; m <= currentL; m++) {
+          const btn = document.createElement('button');
+          const isSelected = m === currentMl;
+          const label = m > 0 ? `+${m}` : `${m}`;
+          btn.className = `py-1 px-2.5 rounded-lg text-xs font-mono font-bold border transition ${
+            isSelected
+              ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
+              : 'bg-white text-slate-700 border-slate-200 hover:border-indigo-300'
+          }`;
+          btn.textContent = label;
+          btn.onclick = () => setLabMl(m);
+          btnGroupMl.appendChild(btn);
+        }
+      }
+
+      // Update ms buttons
+      const dispMs = document.getElementById('displayValMs');
+      const isPlus = ms === '+1/2';
+      if (dispMs) dispMs.textContent = isPlus ? '+½ ↑' : '-½ ↓';
+
+      const btnPlus = document.getElementById('btnSpinPlus');
+      const btnMinus = document.getElementById('btnSpinMinus');
+      if (btnPlus && btnMinus) {
+        btnPlus.className = `py-2 px-3 rounded-lg border font-semibold text-xs flex items-center justify-center gap-1 transition ${
+          isPlus
+            ? 'border-indigo-500 bg-indigo-50 text-indigo-700 shadow-xs'
+            : 'border-slate-200 bg-white text-slate-600 hover:border-indigo-300'
+        }`;
+        btnMinus.className = `py-2 px-3 rounded-lg border font-semibold text-xs flex items-center justify-center gap-1 transition ${
+          !isPlus
+            ? 'border-indigo-500 bg-indigo-50 text-indigo-700 shadow-xs'
+            : 'border-slate-200 bg-white text-slate-600 hover:border-indigo-300'
+        }`;
+      }
+
+      // Output cards
+      const orbName = `${n}${letter}`;
+      const labOrbitalName = document.getElementById('labOrbitalName');
+      if (labOrbitalName) labOrbitalName.textContent = orbName;
+
+      const labSetDisplay = document.getElementById('labSetDisplay');
+      if (labSetDisplay) {
+        const msFormatted = isPlus ? '+½' : '-½';
+        labSetDisplay.textContent = `(${n}, ${currentL}, ${currentMl > 0 ? '+' + currentMl : currentMl}, ${msFormatted})`;
+      }
+
+      const numOrbitals = 2 * currentL + 1;
+      const maxSubElectrons = 2 * numOrbitals;
+      const maxLevelElectrons = 2 * n * n;
+      const energySum = n + currentL;
+
+      const propDegen = document.getElementById('labPropDegeneracy');
+      if (propDegen) propDegen.textContent = isEs ? `${numOrbitals} orbitales` : `${numOrbitals} orbitals`;
+
+      const propMaxSub = document.getElementById('labPropMaxElectronsSub');
+      if (propMaxSub) propMaxSub.textContent = `${maxSubElectrons} e⁻ máx`;
+
+      const propMaxLvl = document.getElementById('labPropMaxElectronsLevel');
+      if (propMaxLvl) propMaxLvl.textContent = `${maxLevelElectrons} e⁻ máx`;
+
+      const propEnergy = document.getElementById('labPropEnergyRule');
+      if (propEnergy) propEnergy.textContent = `${n} + ${currentL} = ${energySum}`;
+
+      // Spatial orientation text
+      const spatialLabel = document.getElementById('labSpatialLabel');
+      if (spatialLabel) {
+        if (currentL === 0) {
+          spatialLabel.textContent = isEs ? 'Simetría: Esférica (sin orientación preferente)' : 'Simetria: Esfèrica (sense orientació preferent)';
+        } else if (currentL === 1) {
+          const axis = currentMl === -1 ? 'px' : currentMl === 0 ? 'pz' : 'py';
+          spatialLabel.innerHTML = isEs
+            ? `Orientación: Eje <strong>${axis.toUpperCase()}</strong> (${axis})`
+            : `Orientació: Eix <strong>${axis.toUpperCase()}</strong> (${axis})`;
+        } else if (currentL === 2) {
+          const dLabels = {
+            '-2': { name: 'dxy', desc_es: 'Plano XY (entre ejes X e Y)', desc_ca: 'Pla XY (entre eixos X i Y)' },
+            '-1': { name: 'dyz', desc_es: 'Plano YZ (entre ejes Y y Z)', desc_ca: 'Pla YZ (entre eixos Y i Z)' },
+            '0':  { name: 'dz²', desc_es: 'Eje Z con anillo toroidal ecuatorial en XY', desc_ca: 'Eix Z amb anell toroïdal equatorial en XY' },
+            '1':  { name: 'dxz', desc_es: 'Plano XZ (entre ejes X y Z)', desc_ca: 'Pla XZ (entre eixos X i Z)' },
+            '2':  { name: 'dx²-y²', desc_es: 'Sobre los ejes X e Y', desc_ca: 'Sobre els eixos X i Y' }
+          };
+          const info = dLabels[currentMl] || { name: 'd', desc_es: '', desc_ca: '' };
+          spatialLabel.innerHTML = `<strong>${info.name}</strong> • ${isEs ? info.desc_es : info.desc_ca}`;
+        } else {
+          spatialLabel.textContent = isEs ? `Subnivel f: 7 orbitales degenerados` : `Subnivell f: 7 orbitals degenerats`;
+        }
+      }
+
+      // Pedagogical note
+      const pedNote = document.getElementById('labPedagogicalNote');
+      if (pedNote) {
+        const subName = isEs ? SUBSHELLS[currentL].name_es : SUBSHELLS[currentL].name_ca;
+        pedNote.innerHTML = isEs
+          ? `Para el nivel <strong>n = ${n}</strong>, los valores permitidos de <strong>l</strong> van de 0 hasta ${n - 1}. El subnivel <strong>${orbName}</strong> (${subName}) tiene <strong>${numOrbitals}</strong> orbitales orientados y admite hasta <strong>${maxSubElectrons} electrones</strong>.`
+          : `Per al nivell <strong>n = ${n}</strong>, els valors permesos de <strong>l</strong> van de 0 fins a ${n - 1}. El subnivell <strong>${orbName}</strong> (${subName}) té <strong>${numOrbitals}</strong> orbitals orientats i admet fins a <strong>${maxSubElectrons} electrons</strong>.`;
+      }
+
+      renderOrbitalSvg(currentL, currentMl);
+    }
+
+    function renderOrbitalSvg(l, ml) {
+      const svg = document.getElementById('orbitalSvg');
+      if (!svg) return;
+
+      if (l === 0) {
+        // s orbital: Sphere with radial gradient
+        svg.innerHTML = `
+          <defs>
+            <radialGradient id="gradS" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#818cf8" stop-opacity="0.95"/>
+              <stop offset="65%" stop-color="#4f46e5" stop-opacity="0.6"/>
+              <stop offset="100%" stop-color="#312e81" stop-opacity="0.05"/>
+            </radialGradient>
+          </defs>
+          <line x1="20" y1="100" x2="180" y2="100" stroke="#475569" stroke-dasharray="3 3"/>
+          <line x1="100" y1="20" x2="100" y2="180" stroke="#475569" stroke-dasharray="3 3"/>
+          <text x="185" y="104" fill="#94a3b8" font-size="10" font-family="monospace">x</text>
+          <text x="104" y="24" fill="#94a3b8" font-size="10" font-family="monospace">z</text>
+          <circle cx="100" cy="100" r="60" fill="url(#gradS)" filter="drop-shadow(0 0 12px rgba(99,102,241,0.5))"/>
+          <circle cx="100" cy="100" r="3" fill="#fbbf24"/>
+        `;
+      } else if (l === 1) {
+        // p orbital: Dumbbell lobes with nodal point at nucleus
+        let rot = 0;
+        let axisLabelX = 'x';
+        let axisLabelY = 'z';
+
+        if (ml === -1) {
+          rot = 0; // px: horizontal along x
+          axisLabelX = 'x';
+          axisLabelY = 'y';
+        } else if (ml === 0) {
+          rot = 90; // pz: vertical along z
+          axisLabelX = 'x';
+          axisLabelY = 'z';
+        } else {
+          rot = 45; // py: tilted perspective along y
+          axisLabelX = 'y';
+          axisLabelY = 'z';
+        }
+
+        svg.innerHTML = `
+          <defs>
+            <radialGradient id="lobePos" cx="50%" cy="30%" r="60%">
+              <stop offset="0%" stop-color="#38bdf8"/>
+              <stop offset="100%" stop-color="#0284c7" stop-opacity="0.4"/>
+            </radialGradient>
+            <radialGradient id="lobeNeg" cx="50%" cy="70%" r="60%">
+              <stop offset="0%" stop-color="#f472b6"/>
+              <stop offset="100%" stop-color="#db2777" stop-opacity="0.4"/>
+            </radialGradient>
+          </defs>
+          <line x1="20" y1="100" x2="180" y2="100" stroke="#475569" stroke-dasharray="3 3"/>
+          <line x1="100" y1="20" x2="100" y2="180" stroke="#475569" stroke-dasharray="3 3"/>
+          <text x="185" y="104" fill="#94a3b8" font-size="10" font-family="monospace">${axisLabelX}</text>
+          <text x="104" y="24" fill="#94a3b8" font-size="10" font-family="monospace">${axisLabelY}</text>
+          <g transform="rotate(${rot} 100 100)">
+            <ellipse cx="140" cy="100" rx="36" ry="22" fill="url(#lobePos)" filter="drop-shadow(0 0 8px rgba(56,189,248,0.5))"/>
+            <text x="135" y="104" fill="#ffffff" font-size="11" font-weight="bold" font-family="monospace">+</text>
+            <ellipse cx="60" cy="100" rx="36" ry="22" fill="url(#lobeNeg)" filter="drop-shadow(0 0 8px rgba(244,114,182,0.5))"/>
+            <text x="56" y="104" fill="#ffffff" font-size="12" font-weight="bold" font-family="monospace">−</text>
+          </g>
+          <circle cx="100" cy="100" r="3" fill="#fbbf24"/>
+        `;
+      } else if (l === 2) {
+        // d orbital: 5 DISTINCT geometries according to ml value
+        // Gradients for positive and negative wavefunction phases
+        const commonDefs = `
+          <defs>
+            <radialGradient id="dPosGrad" cx="50%" cy="40%" r="60%">
+              <stop offset="0%" stop-color="#34d399"/>
+              <stop offset="100%" stop-color="#059669" stop-opacity="0.35"/>
+            </radialGradient>
+            <radialGradient id="dNegGrad" cx="50%" cy="40%" r="60%">
+              <stop offset="0%" stop-color="#fb7185"/>
+              <stop offset="100%" stop-color="#e11d48" stop-opacity="0.35"/>
+            </radialGradient>
+            <radialGradient id="donutGrad" cx="50%" cy="50%" r="60%">
+              <stop offset="0%" stop-color="#fb7185" stop-opacity="0.85"/>
+              <stop offset="60%" stop-color="#e11d48" stop-opacity="0.6"/>
+              <stop offset="100%" stop-color="#881337" stop-opacity="0.15"/>
+            </radialGradient>
+          </defs>
+        `;
+
+        if (ml === 0) {
+          // dz²: Two vertical elongated lobes along z-axis + equatorial donut (torus) in xy-plane
+          svg.innerHTML = `
+            ${commonDefs}
+            <!-- Axis lines -->
+            <line x1="20" y1="100" x2="180" y2="100" stroke="#475569" stroke-dasharray="3 3"/>
+            <line x1="100" y1="15" x2="100" y2="185" stroke="#475569" stroke-dasharray="3 3"/>
+            <text x="185" y="104" fill="#94a3b8" font-size="10" font-family="monospace">xy</text>
+            <text x="104" y="24" fill="#38bdf8" font-size="11" font-weight="bold" font-family="monospace">z</text>
+
+            <!-- Back of the equatorial donut ring -->
+            <ellipse cx="100" cy="100" rx="46" ry="15" fill="none" stroke="#fb7185" stroke-width="9" stroke-opacity="0.65" stroke-dasharray="0 40 100 0"/>
+
+            <!-- dz² Vertical Lobes (Positive phase) -->
+            <!-- Top lobe -->
+            <ellipse cx="100" cy="56" rx="20" ry="38" fill="url(#dPosGrad)" filter="drop-shadow(0 0 10px rgba(52,211,153,0.5))"/>
+            <text x="96" y="58" fill="#ffffff" font-size="12" font-weight="bold" font-family="monospace">+</text>
+            <!-- Bottom lobe -->
+            <ellipse cx="100" cy="144" rx="20" ry="38" fill="url(#dPosGrad)" filter="drop-shadow(0 0 10px rgba(52,211,153,0.5))"/>
+            <text x="96" y="148" fill="#ffffff" font-size="12" font-weight="bold" font-family="monospace">+</text>
+
+            <!-- Front of equatorial donut collar (Negative phase ring) -->
+            <ellipse cx="100" cy="100" rx="44" ry="14" fill="none" stroke="#fb7185" stroke-width="11" stroke-opacity="0.9" filter="drop-shadow(0 0 8px rgba(251,113,133,0.6))"/>
+            <ellipse cx="100" cy="100" rx="38" ry="10" fill="none" stroke="#881337" stroke-width="2"/>
+            <text x="132" y="103" fill="#ffffff" font-size="11" font-weight="bold" font-family="monospace">−</text>
+            <text x="62" y="103" fill="#ffffff" font-size="11" font-weight="bold" font-family="monospace">−</text>
+
+            <!-- Nucleus -->
+            <circle cx="100" cy="100" r="3" fill="#fbbf24"/>
+          `;
+        } else if (ml === 2) {
+          // dx²-y²: 4 lobes aligned EXACTLY ALONG the X and Y axes
+          svg.innerHTML = `
+            ${commonDefs}
+            <!-- Axis lines -->
+            <line x1="15" y1="100" x2="185" y2="100" stroke="#64748b" stroke-width="1.5"/>
+            <line x1="100" y1="15" x2="100" y2="185" stroke="#64748b" stroke-width="1.5"/>
+            <text x="187" y="104" fill="#38bdf8" font-size="11" font-weight="bold" font-family="monospace">x</text>
+            <text x="104" y="22" fill="#38bdf8" font-size="11" font-weight="bold" font-family="monospace">y</text>
+
+            <!-- Lobes along x-axis (Positive phase) -->
+            <ellipse cx="140" cy="100" rx="34" ry="19" fill="url(#dPosGrad)" filter="drop-shadow(0 0 8px rgba(52,211,153,0.45))"/>
+            <text x="136" y="104" fill="#ffffff" font-size="12" font-weight="bold" font-family="monospace">+</text>
+            <ellipse cx="60" cy="100" rx="34" ry="19" fill="url(#dPosGrad)" filter="drop-shadow(0 0 8px rgba(52,211,153,0.45))"/>
+            <text x="56" y="104" fill="#ffffff" font-size="12" font-weight="bold" font-family="monospace">+</text>
+
+            <!-- Lobes along y-axis (Negative phase) -->
+            <ellipse cx="100" cy="60" rx="19" ry="34" fill="url(#dNegGrad)" filter="drop-shadow(0 0 8px rgba(251,113,133,0.45))"/>
+            <text x="96" y="64" fill="#ffffff" font-size="13" font-weight="bold" font-family="monospace">−</text>
+            <ellipse cx="100" cy="140" rx="19" ry="34" fill="url(#dNegGrad)" filter="drop-shadow(0 0 8px rgba(251,113,133,0.45))"/>
+            <text x="96" y="144" fill="#ffffff" font-size="13" font-weight="bold" font-family="monospace">−</text>
+
+            <!-- Nucleus -->
+            <circle cx="100" cy="100" r="3" fill="#fbbf24"/>
+          `;
+        } else if (ml === -2) {
+          // dxy: 4 lobes in the XY plane BETWEEN the axes (bisecting the quadrants at 45°)
+          svg.innerHTML = `
+            ${commonDefs}
+            <!-- Axis lines -->
+            <line x1="20" y1="100" x2="180" y2="100" stroke="#475569" stroke-dasharray="3 3"/>
+            <line x1="100" y1="20" x2="100" y2="180" stroke="#475569" stroke-dasharray="3 3"/>
+            <text x="185" y="104" fill="#94a3b8" font-size="10" font-family="monospace">x</text>
+            <text x="104" y="24" fill="#94a3b8" font-size="10" font-family="monospace">y</text>
+
+            <!-- Lobes rotated 45° between x and y -->
+            <g transform="rotate(45 100 100)">
+              <!-- + Lobes on first diagonal -->
+              <ellipse cx="138" cy="100" rx="32" ry="18" fill="url(#dPosGrad)" filter="drop-shadow(0 0 7px rgba(52,211,153,0.4))"/>
+              <text x="134" y="104" fill="#ffffff" font-size="11" font-weight="bold" font-family="monospace">+</text>
+              <ellipse cx="62" cy="100" rx="32" ry="18" fill="url(#dPosGrad)" filter="drop-shadow(0 0 7px rgba(52,211,153,0.4))"/>
+              <text x="58" y="104" fill="#ffffff" font-size="11" font-weight="bold" font-family="monospace">+</text>
+
+              <!-- - Lobes on perpendicular diagonal -->
+              <ellipse cx="100" cy="62" rx="18" ry="32" fill="url(#dNegGrad)" filter="drop-shadow(0 0 7px rgba(251,113,133,0.4))"/>
+              <text x="96" y="66" fill="#ffffff" font-size="12" font-weight="bold" font-family="monospace">−</text>
+              <ellipse cx="100" cy="138" rx="18" ry="32" fill="url(#dNegGrad)" filter="drop-shadow(0 0 7px rgba(251,113,133,0.4))"/>
+              <text x="96" y="142" fill="#ffffff" font-size="12" font-weight="bold" font-family="monospace">−</text>
+            </g>
+
+            <!-- Nucleus -->
+            <circle cx="100" cy="100" r="3" fill="#fbbf24"/>
+          `;
+        } else if (ml === 1) {
+          // dxz: 4 lobes in the XZ plane (between x and z axes)
+          svg.innerHTML = `
+            ${commonDefs}
+            <!-- Axis lines with clear XZ plane cues -->
+            <line x1="20" y1="100" x2="180" y2="100" stroke="#475569" stroke-dasharray="3 3"/>
+            <line x1="100" y1="20" x2="100" y2="180" stroke="#475569" stroke-dasharray="3 3"/>
+            <!-- Oblique helper axis for perspective depth (Y) -->
+            <line x1="50" y1="150" x2="150" y2="50" stroke="#334155" stroke-dasharray="2 4"/>
+            <text x="185" y="104" fill="#38bdf8" font-size="11" font-weight="bold" font-family="monospace">x</text>
+            <text x="104" y="24" fill="#38bdf8" font-size="11" font-weight="bold" font-family="monospace">z</text>
+            <text x="154" y="48" fill="#64748b" font-size="9" font-family="monospace">y</text>
+
+            <!-- Lobes tilted at 45° in the X-Z plane -->
+            <g transform="rotate(45 100 100)">
+              <ellipse cx="136" cy="100" rx="31" ry="17" fill="url(#dPosGrad)" filter="drop-shadow(0 0 7px rgba(52,211,153,0.4))"/>
+              <text x="132" y="104" fill="#ffffff" font-size="11" font-weight="bold" font-family="monospace">+</text>
+              <ellipse cx="64" cy="100" rx="31" ry="17" fill="url(#dPosGrad)" filter="drop-shadow(0 0 7px rgba(52,211,153,0.4))"/>
+              <text x="60" y="104" fill="#ffffff" font-size="11" font-weight="bold" font-family="monospace">+</text>
+
+              <ellipse cx="100" cy="64" rx="17" ry="31" fill="url(#dNegGrad)" filter="drop-shadow(0 0 7px rgba(251,113,133,0.4))"/>
+              <text x="96" y="68" fill="#ffffff" font-size="12" font-weight="bold" font-family="monospace">−</text>
+              <ellipse cx="100" cy="136" rx="17" ry="31" fill="url(#dNegGrad)" filter="drop-shadow(0 0 7px rgba(251,113,133,0.4))"/>
+              <text x="96" y="140" fill="#ffffff" font-size="12" font-weight="bold" font-family="monospace">−</text>
+            </g>
+
+            <circle cx="100" cy="100" r="3" fill="#fbbf24"/>
+          `;
+        } else {
+          // ml === -1 => dyz: 4 lobes in the YZ plane (between y and z axes) in perspective
+          svg.innerHTML = `
+            ${commonDefs}
+            <!-- Axis lines with clear YZ perspective plane -->
+            <line x1="20" y1="100" x2="180" y2="100" stroke="#334155" stroke-dasharray="2 4"/>
+            <line x1="100" y1="20" x2="100" y2="180" stroke="#475569" stroke-dasharray="3 3"/>
+            <!-- Oblique axis representing Y -->
+            <line x1="45" y1="155" x2="155" y2="45" stroke="#64748b" stroke-width="1.5"/>
+            <text x="185" y="104" fill="#64748b" font-size="9" font-family="monospace">x</text>
+            <text x="104" y="24" fill="#38bdf8" font-size="11" font-weight="bold" font-family="monospace">z</text>
+            <text x="158" y="44" fill="#38bdf8" font-size="11" font-weight="bold" font-family="monospace">y</text>
+
+            <!-- Lobes in the YZ plane (slanted ellipse perspective) -->
+            <g transform="rotate(-30 100 100)">
+              <ellipse cx="132" cy="100" rx="30" ry="16" fill="url(#dPosGrad)" filter="drop-shadow(0 0 7px rgba(52,211,153,0.4))"/>
+              <text x="128" y="104" fill="#ffffff" font-size="11" font-weight="bold" font-family="monospace">+</text>
+              <ellipse cx="68" cy="100" rx="30" ry="16" fill="url(#dPosGrad)" filter="drop-shadow(0 0 7px rgba(52,211,153,0.4))"/>
+              <text x="64" y="104" fill="#ffffff" font-size="11" font-weight="bold" font-family="monospace">+</text>
+
+              <ellipse cx="100" cy="68" rx="16" ry="30" fill="url(#dNegGrad)" filter="drop-shadow(0 0 7px rgba(251,113,133,0.4))"/>
+              <text x="96" y="72" fill="#ffffff" font-size="12" font-weight="bold" font-family="monospace">−</text>
+              <ellipse cx="100" cy="132" rx="16" ry="30" fill="url(#dNegGrad)" filter="drop-shadow(0 0 7px rgba(251,113,133,0.4))"/>
+              <text x="96" y="136" fill="#ffffff" font-size="12" font-weight="bold" font-family="monospace">−</text>
+            </g>
+
+            <circle cx="100" cy="100" r="3" fill="#fbbf24"/>
+          `;
+        }
+      } else {
+        // f orbital: multi-lobed rosette
+        svg.innerHTML = `
+          <defs>
+            <radialGradient id="fLobe" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#c084fc"/>
+              <stop offset="100%" stop-color="#7e22ce" stop-opacity="0.25"/>
+            </radialGradient>
+          </defs>
+          <circle cx="100" cy="100" r="18" fill="none" stroke="#64748b" stroke-dasharray="2 2"/>
+          <g>
+            <ellipse cx="100" cy="55" rx="14" ry="26" fill="url(#fLobe)"/>
+            <ellipse cx="100" cy="145" rx="14" ry="26" fill="url(#fLobe)"/>
+            <ellipse cx="55" cy="100" rx="26" ry="14" fill="url(#fLobe)"/>
+            <ellipse cx="145" cy="100" rx="26" ry="14" fill="url(#fLobe)"/>
+            <ellipse cx="68" cy="68" rx="22" ry="12" transform="rotate(45 68 68)" fill="url(#fLobe)"/>
+            <ellipse cx="132" cy="132" rx="22" ry="12" transform="rotate(45 132 132)" fill="url(#fLobe)"/>
+          </g>
+          <circle cx="100" cy="100" r="3" fill="#fbbf24"/>
+        `;
+      }
+    }
+
+    window.onload = function() {
+      startTimerLoop();
+      state.currentQuestion = generatePracticeQuestion(state.practiceSubmode);
+      renderPracticeQuestion();
+      state.currentRulesChallenge = generateRulesChallenge();
+      newRulesChallenge();
+      updateLabControls();
+      renderGuideTable();
+    };
+  </script>
+</body>
+</html>
